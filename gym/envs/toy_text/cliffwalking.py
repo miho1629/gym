@@ -17,6 +17,13 @@ LEFT = 3
 
 class CliffWalkingEnv(Env):
     """
+    MODIFIED VERSION OF: 
+    https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
+    
+    MODIFICATIONS:
+    1. Reward returned is negative distance from new state and goal
+    2. Boolean is returned indicating if agent has fallen
+    
     This is a simple implementation of the Gridworld Cliff
     reinforcement learning task.
 
@@ -49,7 +56,7 @@ class CliffWalkingEnv(Env):
     [flattened index](https://numpy.org/doc/stable/reference/generated/numpy.unravel_index.html).
 
     ### Reward
-    Each time step incurs -1 reward, and stepping into the cliff incurs -100 reward.
+    Each time step incurs negative distance from goal as reward, and stepping into the cliff incurs -12 reward.
 
     ### Arguments
 
@@ -118,11 +125,13 @@ class CliffWalkingEnv(Env):
         new_position = self._limit_coordinates(new_position).astype(int)
         new_state = np.ravel_multi_index(tuple(new_position), self.shape)
         if self._cliff[tuple(new_position)]:
-            return [(1.0, self.start_state_index, -100, False)]
+            reward = -12
+            return [(1.0, self.start_state_index, reward, False, True)]
 
         terminal_state = (self.shape[0] - 1, self.shape[1] - 1)
+        reward =  1 if is_done else -1 * math.sqrt((new_position[0] - terminal_state[0])**2 + (new_position[1] - terminal_state[1])**2)
         is_done = tuple(new_position) == terminal_state
-        return [(1.0, new_state, -1, is_done)]
+        return [(1.0, new_state, reward, is_done, False)]
 
     def step(self, a):
         transitions = self.P[self.s][a]
